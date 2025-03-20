@@ -53,7 +53,7 @@ logme "Serial Number: $SERIAL"
 # Uninstall Crowdstrike
 if command -v /opt/crowdstrike/falconctl &> /dev/null; then
   logme "Crowdstrike Falcon detected. Uninstalling..."
-  sudo apt -y remove falcon-sensor
+  sudo apt-get purge falcon-sensor
   if [ $? -eq 0 ]; then
     logme "Crowdstrike Falcon uninstalled successfully."
   else
@@ -75,7 +75,7 @@ elif command -v systemctl &> /dev/null; then
         fi
     else
         logme "Crowdstrike Falcon service not active. Attempting direct uninstall."
-        sudo apt -y remove falcon-sensor
+        sudo apt-get purge falcon-sensor
         if [ $? -eq 0 ]; then
             logme "Crowdstrike Falcon uninstalled successfully."
         else
