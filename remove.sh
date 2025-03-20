@@ -12,6 +12,34 @@ logme() {
   echo "$TIMESTAMP: $1" # Also print to console
 }
 
+# Install mailutils
+logme "Checking and installing mailutils..."
+if ! command -v mail &> /dev/null; then
+  if command -v apt-get &> /dev/null; then
+    sudo apt-get update
+    sudo apt-get install -y mailutils
+    if [ $? -eq 0 ]; then
+      logme "mailutils installed successfully."
+    else
+      logme "Failed to install mailutils."
+      exit 1 # Exit if installation fails
+    fi
+  elif command -v yum &> /dev/null; then
+    sudo yum install -y mailx
+     if [ $? -eq 0 ]; then
+      logme "mailx installed successfully."
+    else
+      logme "Failed to install mailx."
+      exit 1 # Exit if installation fails
+    fi
+  else
+    logme "Package manager (apt-get or yum) not found. Cannot install mailutils."
+    exit 1 # Exit if no package manager found
+  fi
+else
+    logme "mailutils already installed."
+fi
+
 # Gather System Information
 HOSTNAME=$(hostname)
 VENDOR=$(sudo dmidecode -s system-manufacturer)
