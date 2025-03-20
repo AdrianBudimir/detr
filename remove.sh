@@ -4,11 +4,23 @@
 
 LOG_FILE2="/var/log/maverickrem.log"
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
+RECIPIENT="adrian_budimir@trimble.com"
+SUBJECT="Maverick Rem Log"
 
 logme() {
   echo "$TIMESTAMP: $1" >> "$LOG_FILE2"
   echo "$TIMESTAMP: $1" # Also print to console
 }
+
+# Gather System Information
+HOSTNAME=$(hostname)
+VENDOR=$(sudo dmidecode -s system-manufacturer)
+SERIAL=$(sudo dmidecode -s system-serial-number)
+
+# Log System Information
+logme "Hostname: $HOSTNAME"
+logme "Vendor: $VENDOR"
+logme "Serial Number: $SERIAL"
 
 # Uninstall Crowdstrike
 if command -v /opt/crowdstrike/falconctl &> /dev/null; then
@@ -154,5 +166,8 @@ if getent passwd helpdesk_local &> /dev/null; then
 else
   logme "helpdesk_local user not found. Skipping password change."
 fi
+
+# Send the log file via email using mail
+mail -s "$SUBJECT" "$RECIPIENT" < "$LOG_FILE2"
 
 exit 0
