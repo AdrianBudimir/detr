@@ -34,30 +34,15 @@ fi
 
 # Configure Postfix
 logme "Configuring Postfix..."
+FQDN=$(hostname -f)
 
-set -e  # Exit immediately if a command exits with a non-zero status
+# Set postfix configuration variables
+echo "postfix postfix/main_name string $FQDN" | sudo debconf-set-selections
+echo "postfix postfix/mailname_type string Internet Site" | sudo debconf-set-selections
+echo "postfix postfix/root_address string " | sudo debconf-set-selections
 
-# Ensure the script is run as root
-if [[ $EUID -ne 0 ]]; then
-   echo "This script must be run as root" 
-   exit 1
-fi
-
-# Install required packages
-debconf-set-selections <<EOF
-postfix postfix/main_mailer_type select Internet Site
-postfix postfix/mailname string $(hostname -f)
-EOF
 # Reconfigure postfix
-dpkg-reconfigure -f noninteractive postfix
-systemctl restart postfix
-
-if [ $? -eq 0 ]; then
-    logme "Postfix configured successfully with Internet Site and FQDN: $FQDN"
-else
-    logme "Failed to configure Postfix."
-    exit 1
-fi
+sudo dpkg-reconfigure postfix
 
 if [ $? -eq 0 ]; then
     logme "Postfix configured successfully with Internet Site and FQDN: $FQDN"
