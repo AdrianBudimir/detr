@@ -42,7 +42,7 @@ echo "postfix postfix/mailname_type string Internet Site" | sudo debconf-set-sel
 echo "postfix postfix/root_address string " | sudo debconf-set-selections
 
 # Reconfigure postfix
-sudo dpkg-reconfigure postfix
+# sudo dpkg-reconfigure postfix
 
 if [ $? -eq 0 ]; then
     logme "Postfix configured successfully with Internet Site and FQDN: $FQDN"
