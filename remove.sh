@@ -12,7 +12,7 @@ logme() {
   echo "$TIMESTAMP: $1" # Also print to console
 }
 
-# Install mailutils
+# Install mailutils (Ubuntu-specific)
 logme "Checking and installing mailutils..."
 if ! command -v mail &> /dev/null; then
   if command -v apt-get &> /dev/null; then
@@ -24,20 +24,31 @@ if ! command -v mail &> /dev/null; then
       logme "Failed to install mailutils."
       exit 1 # Exit if installation fails
     fi
-  elif command -v yum &> /dev/null; then
-    sudo yum install -y mailx
-     if [ $? -eq 0 ]; then
-      logme "mailx installed successfully."
-    else
-      logme "Failed to install mailx."
-      exit 1 # Exit if installation fails
-    fi
   else
-    logme "Package manager (apt-get or yum) not found. Cannot install mailutils."
+    logme "Package manager (apt-get) not found. Cannot install mailutils."
     exit 1 # Exit if no package manager found
   fi
 else
     logme "mailutils already installed."
+fi
+
+# Configure Postfix
+logme "Configuring Postfix..."
+FQDN=$(hostname -f)
+
+# Set postfix configuration variables
+echo "postfix postfix/main_name string $FQDN" | sudo debconf-set-selections
+echo "postfix postfix/mailname_type string Internet Site" | sudo debconf-set-selections
+echo "postfix postfix/root_address string " | sudo debconf-set-selections
+
+# Reconfigure postfix
+sudo dpkg-reconfigure postfix
+
+if [ $? -eq 0 ]; then
+    logme "Postfix configured successfully with Internet Site and FQDN: $FQDN"
+else
+    logme "Failed to configure Postfix."
+    exit 1
 fi
 
 # Gather System Information
@@ -170,12 +181,28 @@ done
 
 # Removing Crashplan
 if [ -d "/usr/local/crashplan" ]; then
-  logme "CrashPlan found in /usr/local/crashplan. Running uninstaller."
-  sudo ./uninstallcp.sh -i /usr/local/crashplan -y
+  logme "CrashPlan found in /usr/local/crashplan. Downloading and running uninstaller."
+
+  # Download the uninstaller
+  wget https://raw.githubusercontent.com/AdrianBudimir/detr/refs/heads/main/uninstallcp.sh -O uninstallcp.sh
   if [ $? -eq 0 ]; then
-    logme "CrashPlan uninstalled successfully."
+    logme "CrashPlan uninstaller downloaded successfully."
+    # Make the script executable
+    chmod +x uninstallcp.sh
+    if [ $? -eq 0 ]; then
+       logme "Crashplan uninstaller made executable"
+       # Run the uninstaller
+       sudo ./uninstallcp.sh -i /usr/local/crashplan -y
+       if [ $? -eq 0 ]; then
+          logme "CrashPlan uninstalled successfully."
+       else
+          logme "CrashPlan uninstallation failed."
+       fi
+    else
+       logme "Failed to make Crashplan uninstaller executable"
+    fi
   else
-    logme "CrashPlan uninstallation failed."
+    logme "Failed to download CrashPlan uninstaller."
   fi
 else
   logme "CrashPlan not found in /usr/local/crashplan. Skipping uninstallation."
@@ -197,5 +224,19 @@ fi
 
 # Send the log file via email using mail
 mail -s "$SUBJECT" "$RECIPIENT" < "$LOG_FILE2"
+if [ $? -eq 0 ]; then
+  logme "Log email sent successfully."
+else
+  logme "Failed to send log email."
+fi
+
+# Uninstall mailutils
+logme "Uninstalling mailutils..."
+sudo apt-get remove -y mailutils
+if [ $? -eq 0 ]; then
+  logme "mailutils uninstalled successfully."
+else
+  logme "Failed to uninstall mailutils."
+fi
 
 exit 0
