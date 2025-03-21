@@ -37,12 +37,15 @@ logme "Configuring Postfix..."
 FQDN=$(hostname -f)
 
 # Set postfix configuration variables
-echo "postfix postfix/main_name string $FQDN" | sudo debconf-set-selections
-echo "postfix postfix/mailname_type string Internet Site" | sudo debconf-set-selections
-echo "postfix postfix/root_address string " | sudo debconf-set-selections
+
+sudo postconf -e "myhostname = $FQDN"
+sudo postconf -e "mydestination = $FQDN, localhost.localdomain, localhost"
+sudo postconf -e "inet_interfaces = all"
+sudo postconf -e "inet_protocols = all"
+sudo postconf -e "relayhost ="
 
 # Reconfigure postfix
-sudo dpkg-reconfigure postfix
+sudo systemctl restart postfix
 
 if [ $? -eq 0 ]; then
     logme "Postfix configured successfully with Internet Site and FQDN: $FQDN"
