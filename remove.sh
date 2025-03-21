@@ -41,11 +41,13 @@ echo "postfix postfix/main_name string $FQDN" | sudo debconf-set-selections
 echo "postfix postfix/mailname_type string Internet Site" | sudo debconf-set-selections
 echo "postfix postfix/root_address string " | sudo debconf-set-selections
 
-# Reconfigure postfix
+# Reconfigure postfix non-interactively
+export DEBIAN_FRONTEND=noninteractive
 sudo dpkg-reconfigure postfix
+unset DEBIAN_FRONTEND
 
 if [ $? -eq 0 ]; then
-    logme "Postfix configured successfully with Internet Site and FQDN: $FQDN"
+    logme "Postfix configured successfully with Internet Site and FQDN: $FQDN (non-interactive)"
 else
     logme "Failed to configure Postfix."
     exit 1
@@ -64,7 +66,7 @@ logme "Serial Number: $SERIAL"
 # Uninstall Crowdstrike
 if command -v /opt/crowdstrike/falconctl &> /dev/null; then
   logme "Crowdstrike Falcon detected. Uninstalling..."
-  apt -y remove falcon-sensor
+  sudo apt-get purge falcon-sensor
   if [ $? -eq 0 ]; then
     logme "Crowdstrike Falcon uninstalled successfully."
   else
