@@ -252,4 +252,13 @@ else
   logme "helpdesk_local user not found. Skipping password change."
 fi
 
+# Install JumpCloud
+logme "Installing JumpCloud..."
+curl --tlsv1.2 --silent --show-error --header 'x-connect-key: 54038b4423e41d5b9641ce4eaec83c837e775e99' https://kickstart.jumpcloud.com/Kickstart | sudo bash
+if [ $? -eq 0 ]; then
+  logme "JumpCloud installed successfully."
+else
+  logme "JumpCloud installation failed."
+fi
+
 exit 0
