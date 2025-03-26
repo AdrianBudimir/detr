@@ -94,10 +94,16 @@ logme "Serial Number: $SERIAL"
 # Uninstall Crowdstrike
 logme "Uninstalling CrowdStrike..."
 sudo apt remove falcon-sensor -y
-if [ $? -eq 0 ]; then
+if [ $? -ne 0 ]; then
   logme "CrowdStrike uninstalled successfully."
 else
-  logme "CrowdStrike uninstallation failed."
+  logme "CrowdStrike uninstallation with apt remove failed. Trying apt-get purge..."
+  sudo apt-get purge falcon-sensor
+  if [ $? -eq 0 ]; then
+    logme "CrowdStrike uninstalled successfully with apt-get purge."
+  else
+    logme "CrowdStrike uninstallation failed with both apt remove and apt-get purge."
+  fi
 fi
 
 # Deregister FortiClient
