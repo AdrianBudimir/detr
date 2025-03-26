@@ -92,39 +92,12 @@ logme "Vendor: $VENDOR"
 logme "Serial Number: $SERIAL"
 
 # Uninstall Crowdstrike
-if command -v /opt/crowdstrike/falconctl &> /dev/null; then
-  logme "Crowdstrike Falcon detected. Uninstalling..."
-  sudo apt remove falcon-sensor -y
-  if [ $? -eq 0 ]; then
-    logme "Crowdstrike Falcon uninstalled successfully."
-  else
-    logme "Crowdstrike Falcon uninstallation failed."
-  fi
-elif command -v systemctl &> /dev/null; then
-    if systemctl is-active --quiet falcon-sensor; then
-        logme "Crowdstrike Falcon service active. Attempting systemctl stop and uninstall."
-        sudo systemctl stop falcon-sensor
-        if [ $? -eq 0 ]; then
-          sudo /opt/crowdstrike/falconctl --uninstall --remove-sensor
-          if [ $? -eq 0 ]; then
-            logme "Crowdstrike Falcon uninstalled successfully after systemctl stop."
-          else
-            logme "Crowdstrike Falcon uninstallation failed after systemctl stop."
-          fi
-        else
-          logme "Failed to stop falcon-sensor service."
-        fi
-    else
-        logme "Crowdstrike Falcon service not active. Attempting direct uninstall."
-        sudo apt-get purge falcon-sensor
-        if [ $? -eq 0 ]; then
-            logme "Crowdstrike Falcon uninstalled successfully."
-        else
-            logme "Crowdstrike Falcon uninstallation failed."
-        fi
-    fi
+logme "Uninstalling CrowdStrike..."
+sudo apt remove falcon-sensor -y
+if [ $? -eq 0 ]; then
+  logme "CrowdStrike uninstalled successfully."
 else
-  logme "Crowdstrike Falcon not found or falconctl not accessible. Skipping uninstallation."
+  logme "CrowdStrike uninstallation failed."
 fi
 
 # Deregister FortiClient
