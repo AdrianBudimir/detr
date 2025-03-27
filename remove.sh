@@ -91,16 +91,18 @@ logme "Serial Number: $SERIAL"
 
 # Uninstall Crowdstrike
 logme "Uninstalling CrowdStrike..."
-sudo apt remove falcon-sensor -y
-if [ $? -ne 0 ]; then
-  logme "CrowdStrike uninstalled successfully."
+
+# Try purge first for a more complete removal
+sudo apt-get purge -y falcon-sensor
+if [ $? -eq 0 ]; then
+  logme "CrowdStrike uninstalled successfully with apt-get purge."
 else
-  logme "CrowdStrike uninstallation with apt remove failed. Trying apt-get purge..."
-  sudo apt-get purge falcon-sensor
+  logme "CrowdStrike uninstallation with apt-get purge failed. Trying apt remove..."
+  sudo apt remove -y falcon-sensor
   if [ $? -eq 0 ]; then
-    logme "CrowdStrike uninstalled successfully with apt-get purge."
+    logme "CrowdStrike uninstalled successfully with apt remove."
   else
-    logme "CrowdStrike uninstallation failed with both apt remove and apt-get purge."
+    logme "CrowdStrike uninstallation failed with both apt-get purge and apt remove."
   fi
 fi
 
