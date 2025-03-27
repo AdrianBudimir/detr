@@ -4,8 +4,6 @@
 
 LOG_FILE2="/var/log/maverickrem.log"
 #TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S") #  Timestamp now inside logme
-RECIPIENT="adrian_budimir@trimble.com"
-SUBJECT="Maverick Rem Log"
 
 logme() {
   TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
