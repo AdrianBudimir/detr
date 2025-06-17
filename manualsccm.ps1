@@ -65,6 +65,11 @@ else {
 Write-Host "Running cleanmgr.exe to clean up system files..."
 $cleanMgrConfigID = 65535 # This ID is often used for a comprehensive set of options.
 
+# Create a sageset configuration. This will open the Disk Cleanup settings dialog.
+# You will need to manually select the desired options ONCE when this script is run for the first time
+# with a new sageset ID. After that, 'sagerun' will use the saved settings for that ID.
+# For demonstration purposes, we'll assume a sageset has been configured previously.
+
 # Run cleanmgr.exe with the saved configuration
 try {
     Start-Process cleanmgr.exe -ArgumentList "/sagerun:$cleanMgrConfigID" -Wait
@@ -72,6 +77,36 @@ try {
 }
 catch {
     Write-Warning "Failed to run cleanmgr.exe. Error: $($_.Exception.Message)"
+}
+#endregion
+
+#region Set Sleep Timer to Never
+Write-Host "Setting sleep timer to Never (0 minutes)..."
+try {
+    # PowerCfg /CHANGE {SCHEME_GUID} /SETACVALUEINDEX {SUB_GROUP_GUID} {SETTING_GUID} {VALUE}
+    # Power Scheme GUID: Current active power scheme (use 'powercfg /getactivescheme')
+    # Subgroup GUID for Sleep: 238c9fa8-0cac-4170-b03f-da02e1a874a9
+    # Setting GUID for Sleep after: 29f6c1db-86da-48c5-9fdb-f2b6fd72b15a
+
+    # Get the GUID of the currently active power scheme
+    $activeScheme = (powercfg /getactivescheme) -match 'GUID: (.*)  \(.*\)'
+    $activeSchemeGuid = $Matches[1]
+
+    if ($activeSchemeGuid) {
+        # Set AC (plugged in) sleep timeout to 0 (Never)
+        powercfg /change $activeSchemeGuid /setacvalueindex SUB_SLEEP IDEAL_SLEEP 0
+        Write-Host "Successfully set AC sleep timer to Never."
+
+        # Set DC (battery) sleep timeout to 0 (Never) - often applicable for laptops
+        powercfg /change $activeSchemeGuid /setdcvalueindex SUB_SLEEP IDEAL_SLEEP 0
+        Write-Host "Successfully set DC sleep timer to Never."
+    }
+    else {
+        Write-Warning "Could not determine the active power scheme GUID."
+    }
+}
+catch {
+    Write-Warning "Failed to set sleep timer. Error: $($_.Exception.Message)"
 }
 #endregion
 
@@ -92,9 +127,6 @@ if ($SMSClient) {
         $SMSClient.TriggerSchedule('{00000000-0000-0000-0000-000000000009}') | Out-Null # User Policy Retrieval & Evaluation Cycle
         $SMSClient.TriggerSchedule('{00000000-0000-0000-0000-000000000010}') | Out-Null # Endpoint Protection Health Evaluation
         $SMSClient.TriggerSchedule('{00000000-0000-0000-0000-000000000011}') | Out-Null # User Data Collection Cycle
-
-        # For more SCCM actions, you can query available schedules:
-        # Get-WmiObject -Namespace 'root\ccm\Policy\Machine\ActualConfig' -Class 'CCM_Scheduler_ScheduledActions' | Select-Object ScheduleID, Name
 
         Write-Host "All common SCCM client actions have been triggered."
     }
